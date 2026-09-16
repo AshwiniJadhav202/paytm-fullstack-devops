@@ -1,0 +1,60 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  email    String? @unique
+  name     String?
+  number   String  @unique
+  password String
+  balance  Int     @default(10000)
+
+  sentTransactions     Transaction[] @relation("SentTransactions")
+  receivedTransactions Transaction[] @relation("ReceivedTransactions")
+
+  merchantTransactions MerchantTransaction[]
+}
+
+model Merchant {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  auth_type AuthType
+  balance   Int      @default(0)
+
+  merchantTransactions MerchantTransaction[]
+}
+
+model Transaction {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  amount     Int
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedTransactions", fields: [receiverId], references: [id])
+}
+
+model MerchantTransaction {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  merchantId Int
+  amount     Int
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+}
+
+enum AuthType {
+  Google
+  Github
+}

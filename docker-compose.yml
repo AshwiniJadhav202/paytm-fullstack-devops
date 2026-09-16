@@ -1,0 +1,71 @@
+services:
+
+  mongo:
+    image: mongo:8
+    container_name: paytm-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  postgres:
+    image: postgres:17
+    container_name: paytm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: paytm_password
+      POSTGRES_DB: paytm
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: paytm-backend
+    restart: unless-stopped
+    environment:
+      MONGO_URL: mongodb://mongo:27017/paytm
+      JWT_SECRET: yoursecret
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+
+  user-app:
+    build:
+      context: ./paytm-turbo
+      dockerfile: Dockerfile.user
+    container_name: paytm-user-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:paytm_password@postgres:5432/paytm
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: yoursecret
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+
+  merchant-app:
+    build:
+      context: ./paytm-turbo
+      dockerfile: Dockerfile.merchant
+    container_name: paytm-merchant-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:paytm_password@postgres:5432/paytm
+      NEXTAUTH_URL: http://localhost:3002
+      NEXTAUTH_SECRET: yoursecret
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+
+volumes:
+  mongo_data:
+  postgres_data:
