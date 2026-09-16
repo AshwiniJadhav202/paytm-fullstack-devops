@@ -12,6 +12,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: paytm-turbo
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,12 +25,13 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: paytm-turbo/package-lock.json
 
-      - name: Install root dependencies
+      - name: Install dependencies
         run: npm ci
 
       - name: Generate Prisma Client
-        run: npx prisma generate --schema=paytm-turbo/packages/db/prisma/schema.prisma
+        run: npx prisma generate --schema=packages/db/prisma/schema.prisma
 
       - name: Build Turborepo
         run: npx turbo run build --filter=docs --filter=web
