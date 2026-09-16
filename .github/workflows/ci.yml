@@ -27,6 +27,9 @@ jobs:
           cache: npm
           cache-dependency-path: paytm-turbo/package-lock.json
 
+      - name: Setup npm
+        run: npm install -g npm@10.9.3
+
       - name: Install dependencies
         run: npm ci
 
